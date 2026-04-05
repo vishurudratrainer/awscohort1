@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Update and install OpenJDK 17
+yum update -y
+yum install -y java-17-openjdk-devel
+
+# Set the default Java version (if multiple are installed)
+alternatives --set java /usr/lib/jvm/java-17-openjdk-amd64/bin/java
+
+# Confirm setup
+echo "Java installed successfully" > /home/ec2-user/setup.log

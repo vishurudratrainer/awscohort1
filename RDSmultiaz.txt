@@ -1,0 +1,46 @@
+Phase 1: Setup (The Build)
+Step 1: Create a Subnet Group
+Before creating the DB, you need a DB Subnet Group.
+
+Why: RDS needs to know which subnets (and therefore which AZs) it is allowed to use for the Primary and the Standby.
+
+Action: Go to RDS Console > Subnet groups > Create DB subnet group. Select your VPC and add at least two subnets in different Availability Zones (e.g., us-east-1a and us-east-1b).
+
+Step 2: Create the Database
+Go to Databases > Create database.
+
+Choose Standard create (don't use Easy Create, as it hides the settings you want to teach).
+
+Select your Engine (MySQL or PostgreSQL are best for demos).
+
+Deployment options: This is the most important part. Select Multi-AZ DB instance.
+
+Connectivity: Select the Subnet group you created in Step 1.
+
+Finish the configuration and click Create database.
+
+Phase 2: The Demo (The "Disaster")
+A great demo shows that the Endpoint (the URL of the database) stays exactly the same even when the backend hardware changes.
+
+Step 1: Connect and Monitor
+Open a terminal (on an EC2 instance or your laptop) and run a loop that queries the database every second. This proves the database is "alive."
+
+Bash
+# Replace [endpoint] with your RDS Endpoint
+while true; do 
+  mysql -h [endpoint] -u admin -p'YourPassword' -e "SELECT NOW();"
+  sleep 1
+done
+Step 2: Identify the Current AZ
+In the RDS Console, click on your database. Look at the Connectivity & security tab.
+
+Note the Primary AZ (e.g., us-east-1a) and the Secondary AZ (e.g., us-east-1b).
+
+Step 3: Trigger the Failover
+In the RDS Console, select your DB.
+
+Click Actions > Reboot.
+
+The "Magic" Checkbox: Tick the box that says Reboot with failover?.
+
+Click Confirm.

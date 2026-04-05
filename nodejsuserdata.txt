@@ -1,0 +1,24 @@
+Node js
+
+#!/bin/bash
+
+# 1. Update system
+yum update -y
+
+# 2. Install NVM (Node Version Manager)
+export NVM_DIR="/usr/local/nvm"
+mkdir -p $NVM_DIR
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+
+# 3. Load NVM into the current shell session
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+# 4. Install Node.js (LTS version)
+nvm install --lts
+
+# 5. Make node/npm available to all users by linking to /usr/bin
+ln -s $(which node) /usr/bin/node
+ln -s $(which npm) /usr/bin/npm
+
+# 6. Verify and log
+node -v > /home/ec2-user/node_version.txt
