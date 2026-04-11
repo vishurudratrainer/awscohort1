@@ -1,0 +1,41 @@
+Ensure your application is running on your EC2 instances. A simple Express.js server might look like this: 
+javascript
+const express = require('express');
+const app = express();
+const port = 3000;
+
+app.get('/', (req, res) => {
+  res.send('Hello from Node.js on EC2!');
+});
+
+// Health check endpoint for the Load Balancer
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}`);
+});
+2. Configure Security Groups
+You need two security groups for proper communication: 
+
+ALB Security Group: Allow inbound traffic on port 80 (and 443 if using SSL) from 0.0.0.0/0.
+EC2 Security Group: Allow inbound traffic on your app's port (e.g., 3000) only from the ALB Security Group to ensure users can't bypass the load balancer. 
+3. Create a Target Group
+Navigate to the Target Groups section in the EC2 Console.
+Choose Instances as the target type.
+Set the Protocol to HTTP and Port to 3000 (or your app's port).
+Configure Health Checks: Use the /health path created in your app code.
+Register your running EC2 instances as targets. 
+Medium
+Medium
+ 
+4. Create the Application Load Balancer 
+In the EC2 Console, go to Load Balancers and click Create Load Balancer.
+Select Application Load Balancer.
+Listeners: Set a listener for protocol HTTP on port 80.
+Availability Zones: Select at least two subnets in different zones for high availability.
+Routing: Select the Target Group you created in the previous step. 
+
+Verification
+Once the ALB state changes to "Active," copy the DNS Name of the load balancer (e.g., ://amazonaws.com) and paste it into your browser. Refreshing the page should ideally show responses from different instances if you have multiple servers running.
