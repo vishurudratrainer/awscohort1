@@ -1,0 +1,151 @@
+EC2 Template ---Complete code
+create Load balancer ---> target
+Auto scaling group---> LB
+Create
+#!/bin/bash
+# 1. Update and install Node.js 20
+curl -fsSL https://nodesource.com | bash -
+yum install -y nodejs git
+
+# 2. Install PM2 (Process Manager) globally
+npm install -g pm2
+
+# 3. Setup Application Directory
+mkdir -p /home/ec2-user/app
+cd /home/ec2-user/app
+
+# 4. Create the app.js file directly (For this demo)
+# In a real scenario, you'd use: git clone https://github.com .
+cat <<EOF > app.js
+const http = require('http');
+const server = http.createServer((req, res) => {
+
+  if (req.url === '/health') {
+    res.statusCode = 200;
+    res.end('OK');
+    return;
+  }
+
+  res.statusCode = 200;
+  res.setHeader('Content-Type', 'text/plain');
+  res.end('Hello from Instance: ' + require('os').hostname() + '\n');
+});
+server.listen(3000, '0.0.0.0');
+EOF
+
+# 5. Start the app with PM2
+pm2 start app.js --name "my-node-app"
+
+# 6. Ensure the app starts on instance reboot
+pm2 save
+env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u ec2-user --hp /home/ec2-user
+
+
+To make your Auto Scaling Group (ASG) "self-healing," you need to configure a Health Check. This ensures that if your Node.js process crashes or the server hangs, AWS will automatically terminate that instance and launch a fresh one to replace it.
+Here is the step-by-step configuration for a robust health check:
+## 1. Update your Node.js Code (The Health Endpoint)
+Add a specific /health route to your app.js. This allows the Load Balancer to check if the app is actually responding, rather than just checking if the server is "on."
+
+const http = require('http');
+const server = http.createServer((req, res) => {
+  // Health Check Endpoint
+  if (req.url === '/health') {
+    res.statusCode = 200;
+    res.end('OK');
+    return;
+  }
+
+  // Your main app logic
+  res.statusCode = 200;
+  res.setHeader('Content-Type', 'text/plain');
+  res.end('Hello from ' + require('os').hostname() + '\n');
+});
+
+server.listen(3000, '0.0.0.0');
+
+## 2. Configure the Target Group Health Check
+In the AWS Console, go to EC2 > Target Groups and select the group you created for your Node.js app.
+
+   1. Click the Health checks tab -> Edit.
+   2. Health check path: Change / to /health.
+   3. Advanced health check settings:
+   * Healthy threshold: 2 (Number of consecutive successful checks before considering it "Healthy").
+      * Unhealthy threshold: 3 (Number of failed checks before the Load Balancer stops sending traffic).
+      * Timeout: 5 seconds.
+      * Interval: 30 seconds.
+   
+## 3. Link the ASG to the Load Balancer Health Check
+By default, an Auto Scaling Group only checks if the EC2 instance is "running." It doesn't know if your Node.js app has crashed. You must tell it to listen to the Load Balancer.
+
+   1. Go to EC2 > Auto Scaling Groups.
+   2. Select your group -> Details tab -> Health checks section -> Edit.
+   3. Check the box: Enable ELB health checks (Elastic Load Balancing).
+   4. Health check grace period: Set this to 300 seconds (5 minutes).
+   * Why? This gives your User Data script enough time to install Node.js and start the app before AWS starts "testing" it. If this is too short, AWS might kill the instance before it even finishes booting up!
+   
+## 4. How to Test the "Self-Healing"
+Want to see it in action?
+
+   1. SSH into one of your running instances.
+   2. Stop the Node.js process manually: pm2 stop all.
+   3. Wait about 2-3 minutes.
+   4. Watch the Console: You will see the Load Balancer mark the instance as Unhealthy. Shortly after, the Auto Scaling Group will terminate that instance and automatically start a brand-new one to maintain your "Desired Capacity."
+
+## Summary of the Flow
+
+   1. Node.js App: Exposes /health.
+   2. Load Balancer (ALB): Pings /health every 30 seconds.
+   3. Target Group: Reports "Unhealthy" if the app stops responding.
+   4. ASG: Sees the "Unhealthy" status from the ALB and replaces the instance.
+
+Now that your app is self-healing, would you like to see how to deploy code updates to all these instances without taking the site down?
+
+const http = require('http');
+
+const server = http.createServer((req, res) => {
+  // Health Check Endpoint
+  if (req.url === '/health') {
+    res.statusCode = 200;
+    res.end('OK');
+    return;
+  }
+
+  // Your main app logic
+  res.statusCode = 200;
+  res.setHeader('Content-Type', 'text/plain');
+  res.end('Hello from ' + require('os').hostname() + '\n');
+});
+
+server.listen(3000, '0.0.0.0');
+
+
+
+
+Core Architecture Components
+Application Load Balancer (ALB): Acts as the entry point, distributing incoming requests across your fleet of Node.js instances.
+Launch Template: A blueprint containing the instance configuration (AMI with Node.js installed, instance type, security groups, and key pairs).
+Auto Scaling Group (ASG): Manages the fleet based on the launch template, maintaining a specific number of instances (minimum, maximum, and desired capacity). 
+
+Step-by-Step Setup Example
+1. Prepare your Node.js Environment
+Create an AMI: Set up a base EC2 instance, install Node.js, and clone your application code.
+Health Check Endpoint: Ensure your Node.js app (using Express, Hapi, etc.) has a simple route like /status that returns a 200 OK.
+Create Image: Once the instance is ready, use the Amazon EC2 Console to "Create Image" (AMI) from that instance. 
+
+2. Create a Launch Template
+Go to the Launch Templates section in the EC2 dashboard.
+Select the AMI you just created.
+Choose an Instance Type (e.g., t2.micro for testing).
+Configure a Security Group that allows traffic on the port your Node.js app uses (e.g., port 3000 or 8080). 
+
+3. Set Up the Auto Scaling Group (ASG)
+Create a new ASG and link it to your Launch Template.
+Configure Group Size: Set your minimum (e.g., 2), maximum (e.g., 10), and desired capacity (e.g., 2) to ensure high availability.
+Attach Load Balancer: Select "Attach to an existing load balancer" and choose your Target Group (which routes traffic from the ALB to your instances). 
+
+4. Define Scaling Policies
+Choose how you want the fleet to grow or shrink: 
+Target Tracking: Keep average CPU utilization at 50%. AWS will add/remove instances to maintain this.
+Scheduled Scaling: Scale up every Monday morning or before a known sales event. 
+
+
