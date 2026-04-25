@@ -1,0 +1,138 @@
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+
+const client = new DynamoDBClient({
+  region: "us-east-1",
+  credentials: {
+    accessKeyId: "YOUR_ACCESS_KEY",
+    secretAccessKey: "YOUR_SECRET_KEY"
+  }
+});
+
+
+npm install @aws-sdk/client-dynamodb @aws-sdk/lib-dynamodb
+
+
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { 
+  DynamoDBDocumentClient, 
+  PutCommand, 
+  GetCommand, 
+  UpdateCommand, 
+  DeleteCommand,
+  ScanCommand 
+} from "@aws-sdk/lib-dynamodb";
+
+// 1. Initialize Clients
+const client = new DynamoDBClient({ region: "us-east-1" });
+const docClient = DynamoDBDocumentClient.from(client);
+const TABLE_NAME = "Users";
+
+// --- CRUD FUNCTIONS ---
+
+// CREATE: Add a new user
+export const createUser = async (user) => {
+  const command = new PutCommand({
+    TableName: TABLE_NAME,
+    Item: user, // e.g., { id: "1", name: "Alice", email: "alice@example.com" }
+  });
+  return await docClient.send(command);
+};
+
+// READ: Get a user by ID
+export const getUser = async (id) => {
+  const command = new GetCommand({
+    TableName: TABLE_NAME,
+    Key: { id },
+  });
+  const response = await docClient.send(command);
+  return response.Item;
+};
+
+// UPDATE: Update a user's name
+export const updateUserName = async (id, newName) => {
+  const command = new UpdateCommand({
+    TableName: TABLE_NAME,
+    Key: { id },
+    UpdateExpression: "set #n = :name",
+    ExpressionAttributeNames: { "#n": "name" },
+    ExpressionAttributeValues: { ":name": newName },
+    ReturnValues: "ALL_NEW",
+  });
+  const response = await docClient.send(command);
+  return response.Attributes;
+};
+
+// DELETE: Remove a user
+export const deleteUser = async (id) => {
+  const command = new DeleteCommand({
+    TableName: TABLE_NAME,
+    Key: { id },
+  });
+  return await docClient.send(command);
+};
+
+// LIST: Get all users (Scan)
+export const listUsers = async () => {
+  const command = new ScanCommand({ TableName: TABLE_NAME });
+  const response = await docClient.send(command);
+  return response.Items;
+};
+
+
+1. Structure (Schema)
+RDBMS (SQL): Rigid and organized. You must define your columns (Name, Age, Email) before you add data. If you want to add a "Phone Number" later, you have to change the structure of the entire table.
+DynamoDB (NoSQL): Flexible. One row can have a name and age, while the next row can have a name, age, and a favorite color. It doesn't care if rows look different. 
+2. Scaling (Growth)
+RDBMS: Scales Up. If your database gets too slow, you usually have to buy a bigger, more powerful server (more RAM, faster CPU). This has a "ceiling" where you eventually can't buy a bigger computer.
+DynamoDB: Scales Out. It spreads your data across many servers. It’s designed to handle massive amounts of traffic (like Amazon.com on Prime Day) without slowing down, no matter how much data you add. 
+3. Relationships (Joins)
+RDBMS: Great at connecting data. You can easily "Join" a Users table with an Orders table to see who bought what.
+DynamoDB: Doesn't do "Joins." You are encouraged to keep all related data together in one place. If you need to see a user's orders, you usually store them in a way that you can grab them in one "get" request. 
+4. Performance
+RDBMS: Speed can vary depending on how complex your query is.
+DynamoDB: Predictable speed. Whether you have 100 items or 100 million items, getting a single item usually takes the same amount of time (typically under 10 milliseconds). 
+Feature 	RDBMS (e.g., MySQL, Postgres)	DynamoDB (NoSQL)
+Data Shape	Tables with fixed columns	Key-Value or Documents
+Best For	Complex relationships & reporting	High-speed, massive scale apps
+Scaling	Vertical (Bigger server)	Horizontal (More servers)
+Flexibility	Low (Strict schema)	High (Schema-less)
+Summary: Use RDBMS if your data is complex and changes often. Use DynamoDB if you need extreme speed and plan to grow to millions of users. 
+
+
+
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, PutCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
+
+const client = new DynamoDBClient({ region: "us-east-1" });
+const docClient = DynamoDBDocumentClient.from(client);
+const TABLE_NAME = "FlexibleTable";
+
+const runExample = async () => {
+  // Item 1: A basic user profile
+  const user1 = {
+    id: "user_101",          // Partition Key (Required)
+    name: "Alice",
+    email: "alice@test.com"
+  };
+
+  // Item 2: A user profile with totally different "dynamic" fields
+  const user2 = {
+    id: "user_102",          // Partition Key (Required)
+    name: "Bob",
+    preferences: { theme: "dark", notifications: true },
+    tags: ["premium", "early-adopter"],
+    lastLogin: "2023-10-01"
+  };
+
+  // Saving both to the same table
+  await docClient.send(new PutCommand({ TableName: TABLE_NAME, Item: user1 }));
+  await docClient.send(new PutCommand({ TableName: TABLE_NAME, Item: user2 }));
+
+  console.log("Items saved successfully!");
+  
+  // Fetching them back to see the difference
+  const { Items } = await docClient.send(new ScanCommand({ TableName: TABLE_NAME }));
+  console.log("Current Table Content:", JSON.stringify(Items, null, 2));
+};
+
+runExample();
