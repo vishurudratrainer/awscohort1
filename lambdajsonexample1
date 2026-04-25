@@ -1,0 +1,23 @@
+export const handler = async (event) => {
+  // TODO implement
+  console.log(JSON.stringify(event))
+  const age = event.queryStringParameters?.age
+  let name = null
+  
+  if(event.body){
+  const jsonbody=JSON.parse(event.body)
+
+  console.log(jsonbody)
+  name = jsonbody.name
+}
+  if(name){
+    return {msg:`Hello ${name} from Lambda ${age}`}
+
+  }
+  const response = {
+    statusCode: 200,
+
+    body: JSON.stringify('Hello from Lambda for Questpond!' + age),
+  };
+  return response;
+};
