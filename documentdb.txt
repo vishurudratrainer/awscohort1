@@ -1,0 +1,103 @@
+npm install mongodb
+
+
+const { MongoClient } = require('mongodb');
+const fs = require('fs');
+
+// 1. Connection settings
+const username = '<your-username>';
+const password = '<your-password>';
+const host = '<your-cluster-endpoint>'; // e.g., mycluster.node.us-east-1.docdb.amazonaws.com
+const port = '27017';
+
+// 2. Load the CA certificate
+const ca = [fs.readFileSync("global-bundle.pem")];
+
+// 3. Build the connection string
+// Note: DocumentDB requires 'tls=true' and 'replicaSet=rs0'
+const url = `mongodb://${username}:${password}@${host}:${port}/?tls=true&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false`;
+
+async function run() {
+  const client = new MongoClient(url, {
+    tlsCAFile: `global-bundle.pem`, // Path to your downloaded .pem file
+  });
+
+  try {
+    await client.connect();
+    console.log("Connected successfully to DocumentDB");
+
+    const db = client.db("testDatabase");
+    const collection = db.collection("testCollection");
+
+    // Insert a document
+    await collection.insertOne({ name: "DocumentDB", type: "NoSQL" });
+    
+    // Find the document
+    const doc = await collection.findOne({ name: "DocumentDB" });
+    console.log("Found Document:", doc);
+
+  } catch (err) {
+    console.error("Connection error:", err.stack);
+  } finally {
+    await client.close();
+  }
+}
+
+run();
+
+
+
+# Update the instance
+sudo yum update -y
+
+# Install Node.js (example for Amazon Linux 2023)
+sudo dnf install -y nodejs
+
+# Create a project folder
+mkdir my-docdb-app && cd my-docdb-app
+
+# Install the MongoDB driver
+npm install mongodb
+
+
+3. Download the AWS CA Certificate
+The instance needs the public key to establish a secure TLS connection to DocumentDB:
+bash
+wget https://amazonaws.com
+Use code with caution.
+4. Create and Run the Script
+Create a file named app.js using a text editor (like nano app.js) and paste the code from our previous conversation.
+Make sure you update these values in the code:
+host: Use your Cluster Endpoint (found in the AWS Console).
+username/password: Use the credentials you set during cluster creation.
+ca: Ensure the path matches global-bundle.pem.
+Run the application:
+bash
+node app.js
+
+wget https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem
+
+
+wget https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem
+
+wget https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem
+
+
+mongodb://user123:admin123$@docdb-2026-04-26-14-42-51.cluster-cc96qsoiq1za.us-east-1.docdb.amazonaws.com:27017/?tls=true&tlsCAFile=global-bundle.pem&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false
+
+
+
+mongosh --version
+
+
+
+Download the archive: Visit the MongoDB Shell Download page and copy the link for the Linux 64-bit .tgz package, then download it:
+bash
+wget https://downloads.mongodb.com/compass/mongosh-2.2.15-linux-x64-openssl3.tgz
+Extract the files:
+bash
+tar -xvf mongosh-2.2.15-linux-x64-openssl3.tgz
+Move to PATH: Copy the binary to a directory in your system path (like /usr/local/bin) to run it from anywhere:
+bash
+sudo cp mongosh-2.2.15-linux-x64-openssl3/bin/mongosh /usr/local/bin/
+sudo cp mongosh-2.2.15-linux-x64-openssl3/bin/mongosh_crypt_v1.so /usr/local/lib
