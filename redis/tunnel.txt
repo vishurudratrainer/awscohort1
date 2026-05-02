@@ -1,0 +1,13 @@
+Step 1: Prepare your "Bridge" (EC2)Identify your EC2: Pick an EC2 instance that lives in the same VPC as your Redis cache.Update Security Groups:Redis Security Group: Go to the Inbound Rules. Add a rule for Port 6379. Set the Source to be the Security Group ID of your EC2 instance.EC2 Security Group: Ensure it allows Port 22 (SSH) from your current IP address.Step 2: Run the Tunnel CommandOpen your terminal on your local machine (Mac/Linux) or PowerShell/Command Prompt (Windows) and run:bashssh -i "my-aws-key.pem" -N -L 6379:://amazonaws.com ec2-user@3.95.12.34
+Use code with caution.What this command does:-i "my-aws-key.pem": Uses your private key to log into the EC2.-N: Tells SSH not to execute a remote command (it just opens the connection for the tunnel).-L 6379:REDIS_ENDPOINT:6379: Maps your local port 6379 to the remote Redis endpoint on port 6379.ec2-user@3.95.12.34: Your EC2 username and its Public IP.Step 3: Connect your Node.js appWhile that terminal window is running, your computer thinks Redis is running locally. You change your code to point to localhost:javascriptconst Redis = require('ioredis');
+
+// Connect to 'localhost' instead of the AWS endpoint
+const redis = new Redis({
+  host: '127.0.0.1', 
+  port: 6379,
+  // IMPORTANT: If your AWS Redis has TLS enabled, 
+  // you still need 'tls: {}' here even over a tunnel.
+  tls: {} 
+});
+
+redis.set('test', 'It works!');
