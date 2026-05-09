@@ -1,1 +1,54 @@
 msiexec.exe /i https://awscli.amazonaws.com/AWSCLIV2.msi
+
+To install the AWS CLI, download the version 2 installer specific to your operating system. Once installed, use the aws configure command to link your AWS account credentials. [1, 2, 3] 
+## 1. Installation Guide
+
+| Operating System [1, 4, 5, 6, 7] | Installation Method |
+|---|---|
+| Windows | Download and run the 64-bit MSI installer. |
+| macOS | Download the Universal PKG installer or use brew install awscli. |
+| Linux (x86_64) | Run: curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip", then unzip awscliv2.zip and sudo ./aws/install. |
+
+Verify Installation: Run aws --version in your terminal to ensure it returns the version info. [8, 9] 
+------------------------------
+## 2. AWS CLI Complete Cheat Sheet [10] ## Setup & Configuration
+
+* aws configure: Initial setup for Access Key, Secret Key, Region, and Output Format.
+* aws configure --profile <name>: Setup multiple account profiles.
+* aws sts get-caller-identity: Verify which user/account is currently active. [2, 11, 12, 13] 
+
+## S3 (Storage)
+
+* aws s3 ls: List all buckets.
+* aws s3 ls s3://<bucket name>
+* aws s3 mb s3://<bucket-name>: Create a new bucket.
+* aws s3 cp <local-file> s3://<bucket>: Upload a file to S3.
+* aws s3 sync <local-dir> s3://<bucket>: Sync a local folder with an S3 bucket.
+* aws s3 rm s3://<bucket>/<file>: Delete a specific file. [14, 15, 16, 17] 
+aws s3 rm s3://<bucket> --recursive : delete entire bucket
+aws s3 rb s3://<bucket> --force
+## EC2 (Compute)
+
+* aws ec2 describe-instances: List all EC2 instances and their details.
+* aws ec2 start-instances --instance-ids <id>: Start a specific instance.
+* aws ec2 stop-instances --instance-ids <id>: Stop a specific instance.
+* aws ec2 run-instances --image-id <ami-id> --instance-type <type>: Launch a new instance. [12, 15, 18, 19] 
+aws ec2 run-instances --image-id ami-0a59ec92177ec3fad --count 1 --instance-type t2.micro
+aws ec2 terminate-instances --instance-ids i-027d1db4534221b38 
+## IAM (Identity & Access) [15, 20, 21] 
+
+* aws iam list-users: List all IAM users in the account.
+* aws iam create-user --user-name <name>: Create a new user.
+* aws iam attach-user-policy --user-name <name> --policy-arn <arn>: Assign permissions. [15] 
+
+## Lambda & CloudWatch [20, 22] 
+
+* aws lambda list-functions: List all Lambda functions.
+* aws lambda invoke --function-name <name> response.json: Manually trigger a function.
+* aws logs tail /aws/lambda/<name> --follow: View live Lambda logs in your terminal. [15, 20, 22, 23] 
+
+## General Tips
+
+* Help: Append help to any command (e.g., aws s3 help) for detailed documentation.
+* Output Filtering: Use --query 'Reservations[*].Instances[*].[InstanceId]' to filter JSON output.
+* Dry Run: Use --dry-run with EC2 commands to test permissions without performing the action. [11, 13, 18, 24] 
