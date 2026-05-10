@@ -1,0 +1,62 @@
+
+
+   1. Create an S3 Bucket: Create a private bucket (e.g., class-demo-2024).
+   2. Upload Content: Upload a large image (cat.jpg) and a simple index.html file.
+   3. Create Distribution:
+   * Go to the [CloudFront Console](https://aws.amazon.com/cloudfront/).
+      * Choose your S3 bucket as the Origin domain.
+      * Select Origin Access Control (OAC) to keep the bucket private.
+      * Set Default Root Object to index.html.
+   4. Wait for Deployment: It takes 3-5 minutes to deploy globally. Copy the Distribution Domain Name (e.g., d1111.cloudfront.net). [3, 4, 5, 6, 7] 
+
+------------------------------
+## 2. The Live Class Demo (The "Showcase")## Step A: Demonstrate Latency (The "Why")
+
+* Show S3: Open the direct S3 URL. If you are far from the bucket's region, point out the slight lag.
+* Show CloudFront: Open your d1111.cloudfront.net URL. Show that it loads instantly because it's served from a nearby Edge Location. [8, 9] 
+
+## Step B: Demonstrate Security (Origin Access)
+
+* Try to access the S3 URL directly—it should show 403 Forbidden (because the bucket is private).
+* Refresh the CloudFront URL—it works! Explain that only CloudFront has the "key" to enter the private bucket. [3, 5, 10] 
+
+## Step C: Demonstrate Cache Invalidation (The "How") [11] 
+
+   1. Change the File: Locally change the text in your index.html (e.g., from "Hello Class" to "Class is Over!").
+   2. Re-upload: Upload it to S3.
+   3. The "Problem": Refresh the CloudFront URL. It won't change because CloudFront is still serving the old version from its cache.
+   4. The Fix: In the CloudFront console, go to Invalidations -> Create Invalidation -> type /*.
+   5. Result: Refresh the browser again—the new content appears. [2, 11, 12, 13, 14] 
+
+------------------------------
+## 3. Key "Talking Points" for Students
+
+* Cost: CloudFront has a generous [Free Tier](https://aws.amazon.com/cloudfront/features/) (1 TB of data out per month).
+* WAF Integration: Mention you can block entire countries or block hackers using [AWS WAF](https://aws.amazon.com/cli/) with one click.
+* SSL: Explain that CloudFront provides free HTTPS certificates via ACM. [9, 12, 15, 16] 
+
+
+Redirection content
+
+function handler(event) {
+    // NOTE: This example function is for a viewer request event trigger. 
+    // Choose viewer request for event trigger when you associate this function with a distribution. 
+    var country=event.request.headers['cloudfront-viewer-country'].value
+    if( country == "IN"){
+         var response = {
+        statusCode: 200,
+        statusDescription: 'OK',
+        headers: {
+            'location': { value: 'https://www.india.com' }
+        }
+    };
+    }
+    var response = {
+        statusCode: 200,
+        statusDescription: 'OK',
+        headers: {
+            'cloudfront-functions': { value: 'generated-by-CloudFront-Functions' }
+        }
+    };
+    return response;
+}
