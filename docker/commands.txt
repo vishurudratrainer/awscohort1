@@ -1,0 +1,7 @@
+docker build -t python-flask-app .
+docker run -p 8000:8000 python-flask-app
+
+docker compose up --build
+
+
+docker run -p 8000:8000 pythonapp1 

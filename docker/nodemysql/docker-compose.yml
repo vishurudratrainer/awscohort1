@@ -1,0 +1,36 @@
+
+services:
+  # 1. Node.js Application Service
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PASSWORD=my_cool_secret_pwd
+      - DB_NAME=app_database
+    depends_on:
+       db:
+          condition: service_healthy
+
+  # 2. MySQL Database Service
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=my_cool_secret_pwd
+      - MYSQL_DATABASE=app_database
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+    healthcheck:
+      test: ["CMD","mysqladmin","ping","-h","localhost","-u","root","-pmy_cool_secret_pwd"]
+      timeout: 20s
+      retries: 5
+
+# Permanent volume so you don't lose your data when containers are stopped
+volumes:
+  mysql_data:
