@@ -1,0 +1,29 @@
+my-terraform-project/
+├── provider.tf        # Specifies AWS provider and region
+├── main.tf            # Core resource definitions (the EC2 instance)
+├── variables.tf       # Inputs (e.g., instance size, AMI IDs)
+└── outputs.tf         # Information to print out (e.g., the public IP)
+
+
+company-infra/
+├── provider.tf        # AWS provider configuration
+├── main.tf            # Main orchestration (calls modules or builds core setup)
+├── variables.tf       # Global input variables
+├── outputs.tf         # Global outputs
+├── terraform.tfvars   # Actual secret values/environment variables (gitignored!)
+│
+├── modules/           # Reusable building blocks
+│   ├── vpc/
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   └── outputs.tf
+│   └── ec2/
+│       ├── main.tf
+│       ├── variables.tf
+│       └── outputs.tf
+│
+└── environments/      # Separate state management for Dev vs Prod
+    ├── dev/
+    │   └── main.tf    # Calls modules passing "dev" configurations
+    └── prod/
+        └── main.tf    # Calls modules passing "prod" configurations

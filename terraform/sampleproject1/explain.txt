@@ -1,0 +1,21 @@
+Step 1: Initialize
+Bash
+terraform init
+What it does: Downloads the AWS plugin code required to interact with your AWS account.
+
+Step 2: Preview the Changes
+Bash
+terraform plan
+What it does: Shows you exactly what Terraform is about to create. Look for Plan: 1 to add, 0 to change, 0 to destroy.
+
+Step 3: Apply and Deploy
+Bash
+terraform apply
+What it does: Terraform will show you the plan again and ask you to type yes. Once you do, it will provision the EC2 instance in a few seconds.
+
+Step 4: Clean Up (Optional)
+When you are done playing around and want to avoid unexpected AWS charges, run:
+
+Bash
+terraform destroy
+What it does: Safely tears down and deletes the EC2 instance you just created.
